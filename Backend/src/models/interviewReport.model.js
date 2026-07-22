@@ -40,7 +40,7 @@ const mongoose = require("mongoose");
  *
  */
 
-const technicalQuestionsSchema = new mongoose.Schema({
+const technicalQuestionSchema = new mongoose.Schema({
     question: {
         type: String,
         required: [true, "Technical question is required"]
