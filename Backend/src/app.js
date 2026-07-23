@@ -1,6 +1,5 @@
 const express = require("express")
 const cookieParser = require("cookie-parser")
-// const { model } = require("mongoose")
 const cors = require("cors")
 
 
