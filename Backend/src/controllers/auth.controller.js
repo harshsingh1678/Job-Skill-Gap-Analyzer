@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const tokenBlacklistModel = require("../models/blacklist.model");
 
+
 /**
  * @name registerUserController
  * @description register a new user, expects username, email and password in the request body
@@ -54,6 +55,7 @@ async function registerUserController(req, res) {
   });
 }
 
+
 /**
  * @name loginUserController
  * @description login a user, expects email and password in the request body
@@ -96,6 +98,7 @@ async function loginUserController(req, res) {
   });
 }
 
+
 /**
  * @name logoutUserController
  * @description clear token from user cookie and add the token in blacklist
@@ -103,6 +106,7 @@ async function loginUserController(req, res) {
  */
 
 async function logoutUserController(req, res) {
+
   try {
     const token = req.cookies.token;
 
@@ -147,9 +151,4 @@ async function getMeController(req, res) {
   });
 }
 
-module.exports = {
-  registerUserController,
-  loginUserController,
-  logoutUserController,
-  getMeController,
-};
+module.exports = { registerUserController, loginUserController, logoutUserController, getMeController };

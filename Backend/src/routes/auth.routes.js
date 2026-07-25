@@ -4,12 +4,12 @@ const authMiddleware = require("../middlewares/auth.middleware")
 
 const authRouter = Router()
 
-
 /**
  * @route POST /api/auth/register
  * @description Register a new user
  * @access Public
  */
+
 authRouter.post("/register", authController.registerUserController)
 
 
@@ -18,14 +18,16 @@ authRouter.post("/register", authController.registerUserController)
  * @description login user with email and password
  * @access Public
  */
+
 authRouter.post("/login", authController.loginUserController)
 
 
 /**
  * @route GET /api/auth/logout
  * @description clear token from user cookie and add the token in blacklist
- * @access Public
+ * @access public
  */
+
 authRouter.get("/logout", authController.logoutUserController)
 
 
@@ -34,6 +36,7 @@ authRouter.get("/logout", authController.logoutUserController)
  * @description get the current logged in user details
  * @access private
  */
+
 authRouter.get("/get-me", authMiddleware.authUser, authController.getMeController)
 
 
