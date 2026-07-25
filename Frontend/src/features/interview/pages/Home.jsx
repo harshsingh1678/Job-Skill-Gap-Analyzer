@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import "../style/home.scss"
 import { useInterview } from '../hooks/useInterview.js'
 import { useNavigate } from 'react-router'
@@ -8,15 +8,82 @@ const Home = () => {
     const { loading, generateReport, reports } = useInterview()
     const [jobDescription, setJobDescription] = useState("")
     const [selfDescription, setSelfDescription] = useState("")
+    const [resumeFile, setResumeFile] = useState(null)
+    const [resumePreviewUrl, setResumePreviewUrl] = useState("")
+    const [resumeError, setResumeError] = useState("")
     const resumeInputRef = useRef()
 
     const navigate = useNavigate()
 
+    const createPreviewUrl = (file) => {
+        if (!file) {
+            return ""
+        }
+        return URL.createObjectURL(file)
+    }
+
+    const clearResume = () => {
+        if (resumePreviewUrl) {
+            URL.revokeObjectURL(resumePreviewUrl)
+        }
+        setResumeFile(null)
+        setResumePreviewUrl("")
+        setResumeError("")
+        if (resumeInputRef.current) {
+            resumeInputRef.current.value = ""
+        }
+    }
+
+    const setResume = (file) => {
+        if (!file) {
+            clearResume()
+            return
+        }
+
+        const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+        if (!allowedTypes.includes(file.type)) {
+            setResumeError('Only PDF or DOCX files are supported.')
+            clearResume()
+            return
+        }
+
+        if (file.size > 3 * 1024 * 1024) {
+            setResumeError('Resume file must be 3MB or smaller.')
+            clearResume()
+            return
+        }
+
+        setResumeError("")
+        setResumeFile(file)
+        setResumePreviewUrl(createPreviewUrl(file))
+    }
+
+    const handleResumeChange = (e) => {
+        const file = e.target.files?.[0]
+        setResume(file)
+    }
+
+    const handleDrop = (e) => {
+        e.preventDefault()
+        const file = e.dataTransfer.files?.[0]
+        if (file) {
+            setResume(file)
+        }
+    }
+
     const handleGenerateReport = async () => {
-        const resumeFile = resumeInputRef.current.files[0]
-        const data = await generateReport({ jobDescription, selfDescription, resumeFile })
+        const selectedResume = resumeFile || resumeInputRef.current?.files?.[0]
+        const data = await generateReport({ jobDescription, selfDescription, resumeFile: selectedResume })
         navigate(`/interview/${data._id}`)
     }
+
+    useEffect(() => {
+        return () => {
+            if (resumePreviewUrl) {
+                URL.revokeObjectURL(resumePreviewUrl)
+            }
+        }
+    }, [resumePreviewUrl])
 
     if (loading) {
         return (
@@ -49,12 +116,13 @@ const Home = () => {
                             <span className='badge badge--required'>Required</span>
                         </div>
                         <textarea
+                            value={jobDescription}
                             onChange={(e) => { setJobDescription(e.target.value) }}
                             className='panel__textarea'
                             placeholder={`Paste the full job description here...\ne.g. 'Senior Frontend Engineer at Google requires proficiency in React, TypeScript, and large-scale system design...'`}
                             maxLength={5000}
                         />
-                        <div className='char-counter'>0 / 5000 chars</div>
+                        <div className='char-counter'>{jobDescription.length} / 5000 chars</div>
                     </div>
 
                     {/* Vertical Divider */}
@@ -75,14 +143,33 @@ const Home = () => {
                                 Upload Resume
                                 <span className='badge badge--best'>Best Results</span>
                             </label>
-                            <label className='dropzone' htmlFor='resume'>
+                            <label className='dropzone' htmlFor='resume' onDrop={handleDrop} onDragOver={(e) => e.preventDefault()}>
                                 <span className='dropzone__icon'>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 16 12 12 8 16" /><line x1="12" y1="12" x2="12" y2="21" /><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" /></svg>
                                 </span>
                                 <p className='dropzone__title'>Click to upload or drag &amp; drop</p>
                                 <p className='dropzone__subtitle'>PDF or DOCX (Max 3MB)</p>
-                                <input ref={resumeInputRef} hidden type='file' id='resume' name='resume' accept='.pdf,.docx' />
+                                <input ref={resumeInputRef} hidden type='file' id='resume' name='resume' accept='.pdf,.docx' onChange={handleResumeChange} />
                             </label>
+
+                            {resumeError && <p className='resume-error'>{resumeError}</p>}
+
+                            {resumeFile && (
+                                <div className='resume-preview'>
+                                    <div className='resume-preview__header'>
+                                        <div>
+                                            <p className='resume-preview__name'>{resumeFile.name}</p>
+                                            <p className='resume-preview__meta'>{(resumeFile.size / 1024).toFixed(1)} KB · {resumeFile.type === 'application/pdf' ? 'PDF' : 'DOCX'}</p>
+                                        </div>
+                                        <button type='button' className='resume-preview__remove' onClick={clearResume}>Remove</button>
+                                    </div>
+                                    {resumePreviewUrl && resumeFile.type === 'application/pdf' && (
+                                        <div className='resume-preview__frame'>
+                                            <iframe src={resumePreviewUrl} title='PDF preview' />
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         {/* OR Divider */}
