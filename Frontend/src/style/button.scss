@@ -1,4 +1,4 @@
-.button {
+.button{
 
     border: none;
     outline: none;
@@ -9,12 +9,12 @@
 
     transition: all 0.3s ease-in-out;
 
-    &.primary-button {
+    &.primary-button{
         background-color: #e1034d;
         color: white;
     }
 
-    &:active {
+    &:active{
         transform: scale(0.9);
     }
 }

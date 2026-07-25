@@ -1,5 +1,6 @@
-import { Navigate } from "react-router"
-import { useAuth } from "../hooks/useAuth"
+import { useAuth } from "../hooks/useAuth";
+import { Navigate } from "react-router";
+import React from 'react'
 
 const Protected = ({ children }) => {
     const { loading, user } = useAuth()
@@ -14,5 +15,6 @@ const Protected = ({ children }) => {
 
     return children
 }
+
 
 export default Protected
