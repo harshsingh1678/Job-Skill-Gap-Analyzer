@@ -122,6 +122,7 @@ async function getAllInterviewReportsController(req, res) {
     }
 }
 
+
 /**
  * @description Controller to generate resume PDF based on user self description, resume and job description.
  */
