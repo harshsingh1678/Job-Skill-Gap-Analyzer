@@ -1,7 +1,14 @@
 const multer = require('multer')
 
 
+const ALLOWED_TYPES = [
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+];
+
+
 const upload = multer({
+
     storage: multer.memoryStorage(),
 
     limits: {
@@ -9,8 +16,12 @@ const upload = multer({
     },
 
     fileFilter: (req, file, cb) => {
-        const allowed = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
-        cb(null, allowed.includes(file.mimetype))
+
+        if (ALLOWED_TYPES.includes(file.mimetype)) {
+            return cb(null, true);
+        }
+
+        return cb(new Error("Invalid file type. Only PDF and DOCX are allowed."));
     }
 })
 
