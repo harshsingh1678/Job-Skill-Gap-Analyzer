@@ -79,9 +79,9 @@ async function generateInterViewReportController(req, res) {
 
 async function getInterviewReportByIdController(req, res) {
     try {
-        const { interviewId } = req.params
+        const { interviewReportId } = req.params
 
-        const interviewReport = await interviewReportModel.findOne({ _id: interviewId, user: req.user.id })
+        const interviewReport = await interviewReportModel.findOne({ _id: interviewReportId, user: req.user.id })
 
         if (!interviewReport) {
             return res.status(404).json({
