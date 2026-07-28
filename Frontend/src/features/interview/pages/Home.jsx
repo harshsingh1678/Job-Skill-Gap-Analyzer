@@ -11,6 +11,7 @@ const Home = () => {
     const [resumeFile, setResumeFile] = useState(null)
     const [resumePreviewUrl, setResumePreviewUrl] = useState("")
     const [resumeError, setResumeError] = useState("")
+    const [submissionError, setSubmissionError] = useState("")
     const resumeInputRef = useRef()
 
     const navigate = useNavigate()
@@ -72,9 +73,18 @@ const Home = () => {
     }
 
     const handleGenerateReport = async () => {
+        setSubmissionError("")
         const selectedResume = resumeFile || resumeInputRef.current?.files?.[0]
-        const data = await generateReport({ jobDescription, selfDescription, resumeFile: selectedResume })
-        navigate(`/interview/${data._id}`)
+
+        try {
+            const data = await generateReport({ jobDescription, selfDescription, resumeFile: selectedResume })
+            if (!data || !data._id) {
+                throw new Error("Unable to generate interview report. Please try again.")
+            }
+            navigate(`/interview/${data._id}`)
+        } catch (error) {
+            setSubmissionError(error?.response?.data?.message || error.message || "Unable to generate interview report.")
+        }
     }
 
     useEffect(() => {

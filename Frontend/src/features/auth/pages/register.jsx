@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router'
+import { GoogleLogin } from '@react-oauth/google'
+import "../auth.form.scss"
 import { useAuth } from '../hooks/useAuth'
 
 const Register = () => {
@@ -9,7 +11,7 @@ const Register = () => {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
 
-    const { loading, handleRegister } = useAuth()
+    const { handleRegister, handleGoogleLogin, actionLoading } = useAuth()
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -17,8 +19,9 @@ const Register = () => {
         navigate("/")
     }
 
-    if (loading) {
-        return (<main><h1>Loading.......</h1></main>)
+    const onGoogleSuccess = async (credentialResponse) => {
+        await handleGoogleLogin(credentialResponse.credential)
+        navigate('/')
     }
 
     return (
@@ -47,9 +50,18 @@ const Register = () => {
                             type="password" id="password" name='password' placeholder='Enter password' />
                     </div>
 
-                    <button className='button primary-button' >Register</button>
+                    <button className='button primary-button' disabled={actionLoading}>
+                        {actionLoading ? 'Please wait...' : 'Register'}
+                    </button>
 
                 </form>
+
+                <div className='or-divider'><span>OR</span></div>
+
+                <GoogleLogin
+                    onSuccess={onGoogleSuccess}
+                    onError={() => console.log('Google login failed')}
+                />
 
                 <p>Already have an account? <Link to={"/login"} >Login</Link> </p>
             </div>
