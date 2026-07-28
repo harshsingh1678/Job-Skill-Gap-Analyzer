@@ -32,6 +32,15 @@ authRouter.get("/logout", authController.logoutUserController)
 
 
 /**
+ * @route POST /api/auth/google
+ * @description login or register a user using Google Sign-In (ID token)
+ * @access Public
+ */
+
+authRouter.post("/google", authController.googleAuthController)
+
+
+/**
  * @route GET /api/auth/get-me
  * @description get the current logged in user details
  * @access private

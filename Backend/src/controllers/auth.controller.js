@@ -2,6 +2,9 @@ const userModel = require("../models/user.model");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const tokenBlacklistModel = require("../models/blacklist.model");
+const { OAuth2Client } = require("google-auth-library");
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 
 /**
@@ -70,6 +73,12 @@ async function loginUserController(req, res) {
   if (!user) {
     return res.status(400).json({
       message: "Invalid email or password",
+    });
+  }
+
+  if (!user.password) {
+    return res.status(400).json({
+      message: "This account uses Google Sign-In. Please continue with Google instead.",
     });
   }
 
@@ -151,4 +160,97 @@ async function getMeController(req, res) {
   });
 }
 
-module.exports = { registerUserController, loginUserController, logoutUserController, getMeController };
+/**
+ * @name generateUniqueUsername
+ * @description derive an available, unique username from a Google display name/email
+ */
+
+async function generateUniqueUsername(base) {
+  const cleanBase = (base || "user").replace(/[^a-zA-Z0-9]/g, "").toLowerCase() || "user";
+  let candidate = cleanBase;
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const exists = await userModel.findOne({ username: candidate });
+    if (!exists) return candidate;
+    candidate = `${cleanBase}${Math.floor(1000 + Math.random() * 9000)}`;
+  }
+
+  return `${cleanBase}${Date.now()}`;
+}
+
+
+/**
+ * @name googleAuthController
+ * @description login or register a user using a Google Sign-In ID token, expects "credential" in the request body
+ * @access Public
+ */
+
+async function googleAuthController(req, res) {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({
+        message: "Google credential is required.",
+      });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    if (!payload || !payload.email_verified) {
+      return res.status(401).json({
+        message: "Google account email is not verified.",
+      });
+    }
+
+    const { sub: googleId, email, name } = payload;
+
+    let user = await userModel.findOne({ googleId });
+
+    if (!user) {
+      user = await userModel.findOne({ email });
+
+      if (user) {
+        // Existing email/password account signing in with Google for the first time — link it.
+        user.googleId = googleId;
+        await user.save();
+      } else {
+        const username = await generateUniqueUsername(name || email.split("@")[0]);
+        user = await userModel.create({
+          username,
+          email,
+          googleId,
+        });
+      }
+    }
+
+    const token = jwt.sign(
+      { id: user._id, username: user.username },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" },
+    );
+
+    res.cookie("token", token);
+
+    res.status(200).json({
+      message: "Logged in with Google successfully.",
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    console.error("Google auth error:", error.message);
+    res.status(401).json({
+      message: "Google authentication failed.",
+    });
+  }
+}
+
+module.exports = { registerUserController, loginUserController, logoutUserController, getMeController, googleAuthController };

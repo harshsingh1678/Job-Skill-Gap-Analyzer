@@ -15,8 +15,13 @@ const userSchema = new mongoose.Schema({
     },
 
     password: {
+        type: String
+    },
+
+    googleId: {
         type: String,
-        required: true
+        unique: true,
+        sparse: true
     }
 })
 
