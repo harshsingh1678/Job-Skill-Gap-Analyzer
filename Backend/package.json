@@ -28,5 +28,10 @@
     "pdf-parse": "^2.4.5",
     "puppeteer": "^25.3.0",
     "zod": "^4.4.3"
+  },
+  "allowScripts": {
+    "@napi-rs/canvas@1.0.10": true,
+    "@napi-rs/canvas@0.1.80": true,
+    "@napi-rs/canvas@0.1.100": true
   }
 }
